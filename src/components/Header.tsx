@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Building2, Menu, X } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -28,19 +29,20 @@ const Header = () => {
             <a href="#pricing" className="text-foreground hover:text-accent transition-colors">
               Pricing
             </a>
-            <a href="#register" className="text-foreground hover:text-accent transition-colors">
-              Register
-            </a>
           </nav>
           
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-3">
-            <Button variant="ghost">
-              Sign In
-            </Button>
-            <Button variant="business">
-              Register Shop
-            </Button>
+            <Link to="/auth">
+              <Button variant="ghost">
+                Sign In
+              </Button>
+            </Link>
+            <Link to="/signup">
+              <Button variant="business">
+                Register Business
+              </Button>
+            </Link>
           </div>
           
           {/* Mobile Menu Button */}
@@ -69,16 +71,17 @@ const Header = () => {
               <a href="#pricing" className="text-foreground hover:text-accent transition-colors">
                 Pricing
               </a>
-              <a href="#register" className="text-foreground hover:text-accent transition-colors">
-                Register
-              </a>
               <div className="flex flex-col gap-2 pt-2">
-                <Button variant="ghost" className="justify-start">
-                  Sign In
-                </Button>
-                <Button variant="business" className="justify-start">
-                  Register Shop
-                </Button>
+                <Link to="/auth">
+                  <Button variant="ghost" className="justify-start w-full">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link to="/signup">
+                  <Button variant="business" className="justify-start w-full">
+                    Register Business
+                  </Button>
+                </Link>
               </div>
             </nav>
           </div>

@@ -1,14 +1,11 @@
 import Header from "@/components/Header";
-import RegisterSection from "@/components/RegisterSection";
 
 const Index = () => {
   return (
     <div className="min-h-screen">
       <Header />
       <main>
-        <div id="register">
-          <RegisterSection />
-        </div>
+        {/* The registration section has been removed as per the requirement to hide signup from the public homepage. */}
       </main>
     </div>
   );

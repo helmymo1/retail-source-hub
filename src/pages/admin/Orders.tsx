@@ -3,14 +3,11 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, ShoppingCart, Check, X, Truck, Eye } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { ApproveOrderDialog } from '@/components/ApproveOrderDialog';
 
 interface Order {
   id: string;
@@ -37,8 +34,6 @@ interface Order {
 const AdminOrders = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [deliveryEstimate, setDeliveryEstimate] = useState('');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -47,45 +42,10 @@ const AdminOrders = () => {
 
   const fetchOrders = async () => {
     try {
-      const { data, error } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          shops!inner (
-            name,
-            location,
-            owner_id
-          ),
-          order_items (
-            quantity,
-            unit_price,
-            total_price,
-            products (code, name)
-          )
-        `)
-        .order('created_at', { ascending: false });
-
-      // Get profile data separately
-      const ordersWithProfiles = await Promise.all(
-        (data || []).map(async (order) => {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('full_name, phone')
-            .eq('user_id', order.shops.owner_id)
-            .single();
-          
-          return {
-            ...order,
-            shops: {
-              ...order.shops,
-              profiles: profile || { full_name: '', phone: '' }
-            }
-          };
-        })
-      );
+      const { data, error } = await supabase.rpc('get_orders_with_details');
 
       if (error) throw error;
-      setOrders(ordersWithProfiles);
+      setOrders(data || []);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -100,7 +60,7 @@ const AdminOrders = () => {
   const updateOrderStatus = async (orderId: string, status: string, estimate?: string) => {
     try {
       const updateData: any = { status };
-      if (estimate !== undefined) {
+      if (estimate) {
         updateData.delivery_estimate = estimate;
       }
 
@@ -117,8 +77,6 @@ const AdminOrders = () => {
       });
 
       fetchOrders();
-      setSelectedOrder(null);
-      setDeliveryEstimate('');
     } catch (error: any) {
       toast({
         title: "Error",
@@ -255,41 +213,14 @@ const AdminOrders = () => {
 
                         {order.status === 'pending' && (
                           <>
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button size="sm" variant="default">
-                                  <Check className="w-4 h-4" />
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent>
-                                <DialogHeader>
-                                  <DialogTitle>Approve Order</DialogTitle>
-                                </DialogHeader>
-                                <div className="space-y-4">
-                                  <div>
-                                    <Label htmlFor="delivery_estimate">Delivery Estimate</Label>
-                                    <Textarea
-                                      id="delivery_estimate"
-                                      value={deliveryEstimate}
-                                      onChange={(e) => setDeliveryEstimate(e.target.value)}
-                                      placeholder="e.g., 3-5 business days"
-                                      rows={2}
-                                    />
-                                  </div>
-                                  <div className="flex gap-2">
-                                    <Button 
-                                      onClick={() => updateOrderStatus(order.id, 'approved', deliveryEstimate)}
-                                      className="flex-1"
-                                    >
-                                      Approve Order
-                                    </Button>
-                                  </div>
-                                </div>
-                              </DialogContent>
-                            </Dialog>
-
-                            <Button 
-                              size="sm" 
+                            <ApproveOrderDialog
+                              orderId={order.id}
+                              onApprove={(orderId, deliveryEstimate) =>
+                                updateOrderStatus(orderId, 'approved', deliveryEstimate)
+                              }
+                            />
+                            <Button
+                              size="sm"
                               variant="destructive"
                               onClick={() => updateOrderStatus(order.id, 'rejected')}
                             >

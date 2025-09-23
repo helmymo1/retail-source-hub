@@ -1,13 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, ShoppingCart, Check, X, Truck, Eye } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, X, Truck, Eye, Printer, Download } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ApproveOrderDialog } from '@/components/ApproveOrderDialog';
+import { useReactToPrint } from 'react-to-print';
+import { PrintableOrder } from '@/components/PrintableOrder';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface Order {
   id: string;
@@ -35,6 +39,23 @@ const AdminOrders = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const componentRef = useRef<any>();
+
+  const handlePrint = useReactToPrint({
+    content: () => componentRef.current,
+  });
+
+  const handleDownloadPdf = () => {
+    const input = componentRef.current;
+    html2canvas(input).then((canvas) => {
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF();
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save("order.pdf");
+    });
+  };
 
   useEffect(() => {
     fetchOrders();
@@ -230,13 +251,40 @@ const AdminOrders = () => {
                         )}
 
                         {order.status === 'approved' && (
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => updateOrderStatus(order.id, 'delivered')}
-                          >
-                            <Truck className="w-4 h-4" />
-                          </Button>
+                          <>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => updateOrderStatus(order.id, 'delivered')}
+                            >
+                              <Truck className="w-4 h-4" />
+                            </Button>
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button size="sm" variant="outline">
+                                  <Printer className="w-4 h-4" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-4xl">
+                                <DialogHeader>
+                                  <DialogTitle>Print Order</DialogTitle>
+                                </DialogHeader>
+                                <div>
+                                  <PrintableOrder ref={componentRef} order={order} />
+                                </div>
+                                <div className='flex justify-end gap-2'>
+                                  <Button onClick={handleDownloadPdf}>
+                                    <Download className="w-4 h-4 mr-2" />
+                                    Download PDF
+                                  </Button>
+                                  <Button onClick={handlePrint}>
+                                    <Printer className="w-4 h-4 mr-2" />
+                                    Print
+                                  </Button>
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                          </>
                         )}
                       </div>
                     </div>

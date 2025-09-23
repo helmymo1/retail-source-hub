@@ -13,6 +13,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { usePricing, getPrice } from '@/hooks/usePricing';
 import { ArrowLeft, ShoppingCart, Package, Plus, Minus } from 'lucide-react';
 
 interface Product {
@@ -47,6 +48,7 @@ const Products = () => {
   const [loading, setLoading] = useState(true);
   const { user, isBusinessOwner, isAdmin } = useAuth();
   const { toast } = useToast();
+  const { subtotal, discount, total, discountApplied } = usePricing(cart);
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -90,13 +92,6 @@ const Products = () => {
     fetchProducts();
   }, [fetchProducts]);
 
-  const getPrice = (product: Product, quantity: number) => {
-    if (quantity >= 100) return product.price_100;
-    if (quantity >= 50) return product.price_50;
-    if (quantity >= 10) return product.price_10;
-    return product.price_1;
-  };
-
   const addToCart = (product: Product, quantity: number) => {
     if (quantity <= 0) return;
 
@@ -133,13 +128,6 @@ const Products = () => {
     );
   };
 
-  const getTotalAmount = () => {
-    return cart.reduce((total, item) => {
-      const price = getPrice(item.product, item.quantity);
-      return total + (price * item.quantity);
-    }, 0);
-  };
-
   const submitOrder = async () => {
     if (!user || cart.length === 0) return;
 
@@ -166,7 +154,7 @@ const Products = () => {
         .from('orders')
         .insert({
           shop_id: shop.id,
-          total_amount: getTotalAmount(),
+          total_amount: total,
           status: 'pending'
         })
         .select()
@@ -243,7 +231,7 @@ const Products = () => {
                   <span className="text-sm font-medium">
                     Cart: {cart.reduce((sum, item) => sum + item.quantity, 0)} items
                   </span>
-                  <div className="text-lg font-bold">${getTotalAmount().toFixed(2)}</div>
+                  <div className="text-lg font-bold">${total.toFixed(2)}</div>
                 </div>
               )}
               <Button variant="outline" asChild>
@@ -349,12 +337,22 @@ const Products = () => {
                         </div>
                       ))}
                       
-                      <div className="border-t border-border pt-4">
-                        <div className="flex justify-between items-center mb-4">
-                          <span className="font-semibold">Total:</span>
-                          <span className="font-bold text-lg">${getTotalAmount().toFixed(2)}</span>
+                      <div className="border-t border-border pt-4 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span>Subtotal</span>
+                          <span>${subtotal.toFixed(2)}</span>
                         </div>
-                        <Button onClick={submitOrder} className="w-full">
+                        {discountApplied && (
+                          <div className="flex justify-between items-center text-primary">
+                            <span>Discount</span>
+                            <span>-${discount.toFixed(2)}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between items-center font-bold text-lg">
+                          <span>Total</span>
+                          <span>${total.toFixed(2)}</span>
+                        </div>
+                        <Button onClick={submitOrder} className="w-full !mt-4">
                           Add to Inquiry
                         </Button>
                       </div>

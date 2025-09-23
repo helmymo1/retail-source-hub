@@ -79,6 +79,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           description: error.message,
           variant: "destructive",
         });
+      } else {
+        toast({
+          title: "Sign Up Successful",
+          description: "Your account has been created.",
+        });
       }
       
       return { error };
@@ -110,11 +115,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           title: "Sign Up Failed",
           description: error.message,
           variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Sign Up Successful",
-          description: "Please check your email to confirm your account",
         });
       }
       

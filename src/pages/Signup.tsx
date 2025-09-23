@@ -60,7 +60,7 @@ const Signup = () => {
           title: "Signup Successful",
           description: "Your account and shop have been created.",
         });
-        navigate('/products');
+        navigate('/');
       }
     } catch (error: any) {
       toast({

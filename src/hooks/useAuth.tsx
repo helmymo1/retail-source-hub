@@ -25,40 +25,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    const fetchSession = async () => {
+    const fetchUserRole = async (user: User) => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) throw error;
-
-        setSession(session);
-        setUser(session?.user ?? null);
-
-        if (session?.user) {
-          const { data } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', session.user.id)
-            .single();
-          setUserRole(data?.role || null);
-        } else {
-          setUserRole(null);
-        }
+        const { data } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .single();
+        setUserRole(data?.role || null);
       } catch (error) {
-        console.error('Error fetching session or user role:', error);
+        console.error('Error fetching user role:', error);
         setUserRole(null);
-      } finally {
-        setLoading(false);
       }
     };
 
-    fetchSession();
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      setUser(data.session?.user ?? null);
+      if (data.session?.user) {
+        fetchUserRole(data.session.user);
+      }
+      setLoading(false);
+    });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(true);
-        fetchSession();
+        const currentUser = session?.user;
+        setUser(currentUser ?? null);
+        if (currentUser) {
+          fetchUserRole(currentUser);
+        } else {
+          setUserRole(null);
+        }
       }
     );
 

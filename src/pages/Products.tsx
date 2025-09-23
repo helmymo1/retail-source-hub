@@ -1,9 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -31,20 +37,18 @@ interface CartItem {
   product: Product;
 }
 
+interface GroupedProducts {
+  [categoryName: string]: Product[];
+}
+
 const Products = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [groupedProducts, setGroupedProducts] = useState<GroupedProducts>({});
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const { user, isBusinessOwner, isAdmin } = useAuth();
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('products')
@@ -56,27 +60,35 @@ const Products = () => {
 
       if (error) throw error;
 
-      setProducts(data || []);
+      const products = data || [];
       
-      // Extract unique categories
-      const uniqueCategories = Array.from(
-        new Set(data?.map(p => p.categories.code) || [])
-      );
-      setCategories(uniqueCategories);
-    } catch (error: any) {
+      // Group products by category
+      const grouped = products.reduce((acc, product) => {
+        const categoryName = product.categories.name || 'Uncategorized';
+        if (!acc[categoryName]) {
+          acc[categoryName] = [];
+        }
+        acc[categoryName].push(product);
+        return acc;
+      }, {} as GroupedProducts);
+
+      setGroupedProducts(grouped);
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
       toast({
         title: "Error",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
-  const filteredProducts = selectedCategory === 'all' 
-    ? products 
-    : products.filter(p => p.categories.code === selectedCategory);
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
   const getPrice = (product: Product, quantity: number) => {
     if (quantity >= 100) return product.price_100;
@@ -178,15 +190,16 @@ const Products = () => {
       if (itemsError) throw itemsError;
 
       toast({
-        title: "Order Submitted",
-        description: "Your order has been submitted for review",
+        title: "Inquiry Submitted",
+        description: "Your inquiry has been submitted for review",
       });
 
       setCart([]);
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
       toast({
         title: "Error",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -245,51 +258,37 @@ const Products = () => {
       </header>
 
       <div className="container mx-auto px-4 py-8">
-        {/* Category Filter */}
-        <div className="mb-8">
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant={selectedCategory === 'all' ? 'default' : 'outline'}
-              onClick={() => setSelectedCategory('all')}
-              size="sm"
-            >
-              All Categories
-            </Button>
-            {categories.map(category => (
-              <Button
-                key={category}
-                variant={selectedCategory === category ? 'default' : 'outline'}
-                onClick={() => setSelectedCategory(category)}
-                size="sm"
-              >
-                Category {category}
-              </Button>
-            ))}
-          </div>
-        </div>
-
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Products */}
           <div className="lg:col-span-2">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {filteredProducts.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  onAddToCart={addToCart}
-                  canOrder={isBusinessOwner}
-                />
-              ))}
-            </div>
-            
-            {filteredProducts.length === 0 && (
+            {Object.keys(groupedProducts).length > 0 ? (
+              <Accordion type="multiple" defaultValue={Object.keys(groupedProducts)}>
+                {Object.entries(groupedProducts).map(([categoryName, products]) => (
+                  <AccordionItem value={categoryName} key={categoryName}>
+                    <AccordionTrigger className="text-xl font-semibold">
+                      {categoryName}
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                        {products.map((product) => (
+                          <ProductCard
+                            key={product.id}
+                            product={product}
+                            onAddToCart={addToCart}
+                            canOrder={isBusinessOwner}
+                          />
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            ) : (
               <div className="text-center py-12">
                 <Package className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No products found</h3>
                 <p className="text-muted-foreground">
-                  {selectedCategory === 'all' 
-                    ? 'No products available yet' 
-                    : `No products in category ${selectedCategory}`}
+                  No products available yet.
                 </p>
               </div>
             )}
@@ -302,7 +301,7 @@ const Products = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <ShoppingCart className="w-5 h-5" />
-                    Order Cart ({cart.length})
+                    Inquiry Cart ({cart.length})
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -356,7 +355,7 @@ const Products = () => {
                           <span className="font-bold text-lg">${getTotalAmount().toFixed(2)}</span>
                         </div>
                         <Button onClick={submitOrder} className="w-full">
-                          Submit Order
+                          Add to Inquiry
                         </Button>
                       </div>
                     </div>
@@ -381,9 +380,20 @@ const ProductCard = ({ product, onAddToCart, canOrder }: ProductCardProps) => {
   const [quantity, setQuantity] = useState(1);
 
   return (
-    <Card>
-      <CardContent className="p-6">
-        <div className="flex items-center gap-3 mb-4">
+    <Card className="overflow-hidden">
+      {product.image_url ? (
+        <img
+          src={product.image_url}
+          alt={product.name}
+          className="w-full h-40 object-cover"
+        />
+      ) : (
+        <div className="w-full h-40 bg-muted flex items-center justify-center">
+          <Package className="w-16 h-16 text-muted-foreground" />
+        </div>
+      )}
+      <CardContent className="p-4">
+        <div className="flex items-center gap-3 mb-2">
           <Badge variant="outline" className="font-mono">
             {product.code}
           </Badge>
@@ -392,10 +402,7 @@ const ProductCard = ({ product, onAddToCart, canOrder }: ProductCardProps) => {
           </span>
         </div>
         
-        <h3 className="font-semibold text-lg mb-2">{product.name}</h3>
-        {product.description && (
-          <p className="text-sm text-muted-foreground mb-4">{product.description}</p>
-        )}
+        <h3 className="font-semibold text-lg mb-2 h-12">{product.name}</h3>
         
         <div className="grid grid-cols-2 gap-2 mb-4">
           <div className="text-center p-2 bg-accent/10 rounded">

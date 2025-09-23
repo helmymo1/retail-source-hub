@@ -56,7 +56,7 @@ const AdminProducts = () => {
       const [productsResult, categoriesResult] = await Promise.all([
         supabase
           .from('products')
-          .select('*, categories(code, name)')
+          .select('*, categories(*)')
           .order('code'),
         supabase
           .from('categories')

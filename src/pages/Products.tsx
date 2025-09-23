@@ -56,7 +56,7 @@ const Products = () => {
         .from('products')
         .select(`
           *,
-          categories (code, name)
+          categories (*)
         `)
         .order('code');
 

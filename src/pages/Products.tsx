@@ -108,8 +108,8 @@ const Products = () => {
     });
 
     toast({
-      title: "Added to Cart",
-      description: `${quantity} × ${product.name} added to cart`,
+      title: "Added to Inquiry",
+      description: `${quantity} × ${product.name} added to inquiry`,
     });
   };
 
@@ -289,7 +289,7 @@ const Products = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <ShoppingCart className="w-5 h-5" />
-                    Inquiry Cart ({cart.length})
+                    Inquiry ({cart.length})
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -353,7 +353,7 @@ const Products = () => {
                           <span>${total.toFixed(2)}</span>
                         </div>
                         <Button onClick={submitOrder} className="w-full !mt-4">
-                          Add to Inquiry
+                          Send Inquiry
                         </Button>
                       </div>
                     </div>
@@ -435,7 +435,7 @@ const ProductCard = ({ product, onAddToCart, canOrder }: ProductCardProps) => {
               className="flex-1"
               size="sm"
             >
-              Add to Cart
+              Add to Inquiry
             </Button>
           </div>
         )}

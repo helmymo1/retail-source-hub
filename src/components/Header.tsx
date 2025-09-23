@@ -20,13 +20,13 @@ const Header = () => {
           
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
-            <a href="#categories" className="text-foreground hover:text-accent transition-colors">
+            <Link to="/products" className="text-foreground hover:text-accent transition-colors">
               Categories
-            </a>
-            <a href="#products" className="text-foreground hover:text-accent transition-colors">
+            </Link>
+            <Link to="/products" className="text-foreground hover:text-accent transition-colors">
               Products
-            </a>
-            <a href="#pricing" className="text-foreground hover:text-accent transition-colors">
+            </Link>
+            <a href="/#pricing" className="text-foreground hover:text-accent transition-colors">
               Pricing
             </a>
           </nav>
@@ -62,13 +62,13 @@ const Header = () => {
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t border-border">
             <nav className="flex flex-col gap-4">
-              <a href="#categories" className="text-foreground hover:text-accent transition-colors">
+              <Link to="/products" className="text-foreground hover:text-accent transition-colors">
                 Categories
-              </a>
-              <a href="#products" className="text-foreground hover:text-accent transition-colors">
+              </Link>
+              <Link to="/products" className="text-foreground hover:text-accent transition-colors">
                 Products
-              </a>
-              <a href="#pricing" className="text-foreground hover:text-accent transition-colors">
+              </Link>
+              <a href="/#pricing" className="text-foreground hover:text-accent transition-colors">
                 Pricing
               </a>
               <div className="flex flex-col gap-2 pt-2">

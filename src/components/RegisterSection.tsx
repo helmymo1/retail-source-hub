@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapPin, Phone, Building, User, Shield, CheckCircle } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const RegisterSection = () => {
   return (
@@ -106,9 +107,11 @@ const RegisterSection = () => {
                     </div>
                     
                     <div className="pt-4 border-t border-border">
-                      <Button variant="hero" size="lg" className="w-full mb-3">
-                        Request Registration Visit
-                      </Button>
+                      <Link to="/signup" className="w-full">
+                        <Button variant="hero" size="lg" className="w-full mb-3">
+                          Request Registration Visit
+                        </Button>
+                      </Link>
                       <p className="text-xs text-muted-foreground text-center">
                         Our sales representative will contact you within 24 hours
                       </p>

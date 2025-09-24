@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useCart } from '@/hooks/useCart';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ArrowLeft, Plus, Edit, Trash2, Package, MoreHorizontal } from 'lucide-react';
 
@@ -47,6 +48,7 @@ const AdminProducts = () => {
     category_id: ''
   });
   const { toast } = useToast();
+  const { addToCart } = useCart();
 
   useEffect(() => {
     fetchData();
@@ -193,25 +195,6 @@ const AdminProducts = () => {
       category_id: ''
     });
     setEditingProduct(null);
-  };
-
-  const handleAddToCart = (product: Product) => {
-    const savedCart = localStorage.getItem('wholesale-cart');
-    let cart: any[] = savedCart ? JSON.parse(savedCart) : [];
-
-    const existingItem = cart.find(item => item.productId === product.id);
-
-    if (existingItem) {
-      existingItem.quantity += 1;
-    } else {
-      cart.push({ productId: product.id, quantity: 1, product });
-    }
-
-    localStorage.setItem('wholesale-cart', JSON.stringify(cart));
-    toast({
-      title: 'Added to cart',
-      description: `${product.name} has been added to your cart.`,
-    });
   };
 
   if (loading) {
@@ -418,8 +401,11 @@ const AdminProducts = () => {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuItem onClick={() => handleAddToCart(product)}>
+                              <DropdownMenuItem onClick={() => addToCart(product, 1)}>
                                 Add to Cart
+                              </DropdownMenuItem>
+                              <DropdownMenuItem asChild>
+                                <Link to="/cart">Go to Cart</Link>
                               </DropdownMenuItem>
                               <DropdownMenuItem asChild>
                                 <Link to={`/item/${product.id}`}>View Item Details</Link>

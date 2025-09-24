@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useCart } from "@/hooks/useCart";
 import { Button } from "@/components/ui/button";
 import { Building2, Menu, X, User, LogOut, ShoppingCart } from "lucide-react";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, signOut, isAdmin, isBusinessOwner } = useAuth();
+  const { cartCount } = useCart();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
@@ -37,11 +39,16 @@ const Header = () => {
           <div className="hidden md:flex items-center gap-3">
             {user ? (
               <>
-                {isBusinessOwner && (
+                {(isBusinessOwner || isAdmin) && (
                   <Button variant="outline" size="sm" asChild>
-                    <Link to="/cart">
+                    <Link to="/cart" className="relative">
                       <ShoppingCart className="w-4 h-4 mr-2" />
                       Cart
+                      {cartCount > 0 && (
+                        <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground rounded-full px-2 text-xs">
+                          {cartCount}
+                        </span>
+                      )}
                     </Link>
                   </Button>
                 )}
@@ -98,11 +105,16 @@ const Header = () => {
               <div className="flex flex-col gap-2 pt-2">
                 {user ? (
                   <>
-                    {isBusinessOwner && (
+                    {(isBusinessOwner || isAdmin) && (
                       <Link to="/cart">
-                        <Button variant="outline" className="justify-start w-full">
+                        <Button variant="outline" className="justify-start w-full relative">
                           <ShoppingCart className="w-4 h-4 mr-2" />
                           Cart
+                          {cartCount > 0 && (
+                            <span className="absolute top-1 right-2 bg-primary text-primary-foreground rounded-full px-2 text-xs">
+                              {cartCount}
+                            </span>
+                          )}
                         </Button>
                       </Link>
                     )}

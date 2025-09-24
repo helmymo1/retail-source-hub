@@ -7,7 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { usePricing, getPrice } from '@/hooks/usePricing';
+import { useCart } from '@/hooks/useCart';
+import { getPrice } from '@/hooks/usePricing';
 import { ArrowLeft, ShoppingCart, Package, Plus, Minus, Trash2, Send } from 'lucide-react';
 
 interface Product {
@@ -33,66 +34,20 @@ interface CartItem {
 }
 
 const Cart = () => {
-  const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(false);
   const { user, isBusinessOwner } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { subtotal, discount, total, discountApplied } = usePricing(cart);
+  const {
+    cart,
+    updateCartQuantity,
+    clearCart,
+    subtotal,
+    discount,
+    total,
+    discountApplied,
+  } = useCart();
 
-  useEffect(() => {
-    // Load cart from localStorage on component mount
-    const savedCart = localStorage.getItem('wholesale-cart');
-    if (savedCart) {
-      try {
-        setCart(JSON.parse(savedCart));
-      } catch (error) {
-        console.error('Error loading cart:', error);
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    // Save cart to localStorage whenever cart changes
-    localStorage.setItem('wholesale-cart', JSON.stringify(cart));
-  }, [cart]);
-
-  const updateCartQuantity = (productId: string, newQuantity: number) => {
-    if (newQuantity <= 0) {
-      removeFromCart(productId);
-      return;
-    }
-
-    setCart(prev =>
-      prev.map(item =>
-        item.productId === productId
-          ? { ...item, quantity: newQuantity }
-          : item
-      )
-    );
-
-    toast({
-      title: "Updated",
-      description: "Cart updated successfully",
-    });
-  };
-
-  const removeFromCart = (productId: string) => {
-    setCart(prev => prev.filter(item => item.productId !== productId));
-    
-    toast({
-      title: "Removed",
-      description: "Item removed from cart",
-    });
-  };
-
-  const clearCart = () => {
-    setCart([]);
-    toast({
-      title: "Cleared",
-      description: "Cart cleared successfully",
-    });
-  };
 
   const submitOrder = async () => {
     if (!user || cart.length === 0) return;
@@ -261,7 +216,7 @@ const Cart = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => removeFromCart(item.productId)}
+                            onClick={() => updateCartQuantity(item.productId, 0)}
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>

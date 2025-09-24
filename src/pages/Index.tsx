@@ -13,7 +13,8 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { usePricing, getPrice } from '@/hooks/usePricing';
+import { useCart } from '@/hooks/useCart';
+import { getPrice } from '@/hooks/usePricing';
 import { ArrowLeft, ShoppingCart, Package, Plus, Minus } from 'lucide-react';
 
 interface Product {
@@ -44,11 +45,19 @@ interface GroupedProducts {
 
 const Index = () => {
   const [groupedProducts, setGroupedProducts] = useState<GroupedProducts>({});
-  const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const { user, isBusinessOwner, isAdmin } = useAuth();
   const { toast } = useToast();
-  const { subtotal, discount, total, discountApplied } = usePricing(cart);
+  const {
+    cart,
+    addToCart,
+    updateCartQuantity,
+    clearCart,
+    subtotal,
+    discount,
+    total,
+    discountApplied,
+  } = useCart();
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -91,107 +100,6 @@ const Index = () => {
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
-
-  const addToCart = (product: Product, quantity: number) => {
-    if (quantity <= 0) return;
-
-    setCart(prev => {
-      const existing = prev.find(item => item.productId === product.id);
-      if (existing) {
-        return prev.map(item =>
-          item.productId === product.id
-            ? { ...item, quantity: item.quantity + quantity }
-            : item
-        );
-      }
-      return [...prev, { productId: product.id, quantity, product }];
-    });
-
-    toast({
-      title: "Added to Inquiry",
-      description: `${quantity} × ${product.name} added to inquiry`,
-    });
-  };
-
-  const updateCartQuantity = (productId: string, newQuantity: number) => {
-    if (newQuantity <= 0) {
-      setCart(prev => prev.filter(item => item.productId !== productId));
-      return;
-    }
-
-    setCart(prev =>
-      prev.map(item =>
-        item.productId === productId
-          ? { ...item, quantity: newQuantity }
-          : item
-      )
-    );
-  };
-
-  const submitOrder = async () => {
-    if (!user || cart.length === 0) return;
-
-    try {
-      // Get user's shop
-      const { data: shop, error: shopError } = await supabase
-        .from('shops')
-        .select('id')
-        .eq('owner_id', user.id)
-        .eq('status', 'approved')
-        .single();
-
-      if (shopError || !shop) {
-        toast({
-          title: "Error",
-          description: "No approved shop found for your account",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Create order
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          shop_id: shop.id,
-          total_amount: total,
-          status: 'pending'
-        })
-        .select()
-        .single();
-
-      if (orderError) throw orderError;
-
-      // Create order items
-      const orderItems = cart.map(item => ({
-        order_id: order.id,
-        product_id: item.productId,
-        quantity: item.quantity,
-        unit_price: getPrice(item.product, item.quantity),
-        total_price: getPrice(item.product, item.quantity) * item.quantity
-      }));
-
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems);
-
-      if (itemsError) throw itemsError;
-
-      toast({
-        title: "Inquiry Submitted",
-        description: "Your inquiry has been submitted for review",
-      });
-
-      setCart([]);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
-    }
-  };
 
   if (!user) {
     return (
@@ -352,8 +260,8 @@ const Index = () => {
                           <span>Total</span>
                           <span>${total.toFixed(2)}</span>
                         </div>
-                        <Button onClick={submitOrder} className="w-full !mt-4">
-                          Send Inquiry
+                        <Button asChild className="w-full !mt-4">
+                          <Link to="/cart">View Cart & Send Inquiry</Link>
                         </Button>
                       </div>
                     </div>

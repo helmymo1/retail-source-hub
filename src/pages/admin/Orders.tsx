@@ -43,10 +43,52 @@ const AdminOrders = () => {
 
   const fetchOrders = async () => {
     try {
-      const { data, error } = await supabase.rpc('get_orders_with_details');
+      // First get orders with shops
+      const { data: ordersData, error: ordersError } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          shops!inner (
+            name,
+            location,
+            owner_id
+          ),
+          order_items (
+            quantity,
+            unit_price,
+            total_price,
+            products (
+              code,
+              name
+            )
+          )
+        `)
+        .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setOrders(data || []);
+      if (ordersError) throw ordersError;
+
+      // Then get profiles for shop owners
+      const ownerIds = ordersData?.map(order => order.shops.owner_id) || [];
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, phone')
+        .in('user_id', ownerIds);
+
+      if (profilesError) throw profilesError;
+
+      // Map profiles to orders
+      const ordersWithProfiles = ordersData?.map(order => ({
+        ...order,
+        shops: {
+          ...order.shops,
+          profiles: profilesData?.find(profile => profile.user_id === order.shops.owner_id) || {
+            full_name: 'Unknown',
+            phone: 'N/A'
+          }
+        }
+      })) || [];
+
+      setOrders(ordersWithProfiles);
     } catch (error: any) {
       toast({
         title: "Error",

@@ -36,7 +36,7 @@ const Signup = () => {
 
     try {
       // Step 1: Sign up the user
-      const { data: authData, error: authError } = await signUp(formData.email, formData.password, {
+      const { error: authError } = await signUp(formData.email, formData.password, {
         full_name: formData.ownerName,
         phone: formData.phone
       });
@@ -45,15 +45,34 @@ const Signup = () => {
         throw authError;
       }
 
-      if (authData.user) {
-        // Step 2: Call the RPC to create the shop and assign the role
-        const { error: rpcError } = await supabase.rpc('create_new_shop', {
-          shop_name: formData.shopName,
-          shop_location: formData.shopLocation,
-        });
+      // Wait for user to be available
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        // Step 2: Create the shop
+        const { error: shopError } = await supabase
+          .from('shops')
+          .insert({
+            name: formData.shopName,
+            location: formData.shopLocation,
+            owner_id: user.id,
+            status: 'pending'
+          });
 
-        if (rpcError) {
-          throw rpcError;
+        if (shopError) {
+          throw shopError;
+        }
+
+        // Step 3: Assign business_owner role
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .insert({
+            user_id: user.id,
+            role: 'business_owner'
+          });
+
+        if (roleError) {
+          throw roleError;
         }
 
         toast({

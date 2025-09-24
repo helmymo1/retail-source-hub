@@ -25,39 +25,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    const fetchUserRole = async (user: User) => {
-      try {
-        const { data } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id)
-          .single();
-        setUserRole(data?.role || null);
-      } catch (error) {
-        console.error('Error fetching user role:', error);
-        setUserRole(null);
-      }
-    };
-
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setUser(data.session?.user ?? null);
-      if (data.session?.user) {
-        fetchUserRole(data.session.user);
-      }
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setUserRole(session?.user?.user_metadata?.role || null);
       setLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      (_event, session) => {
         setSession(session);
-        const currentUser = session?.user;
-        setUser(currentUser ?? null);
-        if (currentUser) {
-          fetchUserRole(currentUser);
-        } else {
-          setUserRole(null);
-        }
+        setUser(session?.user ?? null);
+        setUserRole(session?.user?.user_metadata?.role || null);
       }
     );
 
@@ -81,8 +60,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         });
       } else {
         toast({
-          title: "Sign Up Successful",
-          description: "Your account has been created.",
+          title: "Sign In Successful",
+          description: "You have been signed in successfully.",
         });
       }
       

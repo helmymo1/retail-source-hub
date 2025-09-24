@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Index from "./pages/Index";
+import Cart from "./pages/Cart";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./hooks/useAuth";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -40,7 +41,7 @@ const App = () => (
             <Route path="/admin/products" element={<ProtectedRoute requireAdmin><AdminProducts /></ProtectedRoute>} />
             <Route path="/admin/orders" element={<ProtectedRoute requireAdmin><AdminOrders /></ProtectedRoute>} />
             <Route path="/admin/shops" element={<ProtectedRoute requireAdmin><AdminShops /></ProtectedRoute>} />
-            <Route path="/business/orders" element={<ProtectedRoute requireBusinessOwner><BusinessOrders /></ProtectedRoute>} />
+            <Route path="/cart" element={<ProtectedRoute requireBusinessOwner><Cart /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

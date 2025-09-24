@@ -1,10 +1,12 @@
-import { Button } from "@/components/ui/button";
-import { Building2, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { Building2, Menu, X, User, LogOut, ShoppingCart } from "lucide-react";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, signOut, isAdmin, isBusinessOwner } = useAuth();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
@@ -33,16 +35,41 @@ const Header = () => {
           
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-3">
-            <Link to="/auth">
-              <Button variant="ghost">
-                Sign In
-              </Button>
-            </Link>
-            <Link to="/signup">
-              <Button variant="business">
-                Register Business
-              </Button>
-            </Link>
+            {user ? (
+              <>
+                {isBusinessOwner && (
+                  <Button variant="outline" size="sm" asChild>
+                    <Link to="/cart">
+                      <ShoppingCart className="w-4 h-4 mr-2" />
+                      Cart
+                    </Link>
+                  </Button>
+                )}
+                <Button variant="outline" size="sm" asChild>
+                  <Link to="/dashboard">
+                    <User className="w-4 h-4 mr-2" />
+                    Dashboard
+                  </Link>
+                </Button>
+                <Button variant="outline" size="sm" onClick={signOut}>
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link to="/auth">
+                  <Button variant="ghost">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link to="/signup">
+                  <Button>
+                    Register Business
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
           
           {/* Mobile Menu Button */}
@@ -68,20 +95,42 @@ const Header = () => {
               <Link to="/products" className="text-foreground hover:text-accent transition-colors">
                 Products
               </Link>
-              <a href="/#pricing" className="text-foreground hover:text-accent transition-colors">
-                Pricing
-              </a>
               <div className="flex flex-col gap-2 pt-2">
-                <Link to="/auth">
-                  <Button variant="ghost" className="justify-start w-full">
-                    Sign In
-                  </Button>
-                </Link>
-                <Link to="/signup">
-                  <Button variant="business" className="justify-start w-full">
-                    Register Business
-                  </Button>
-                </Link>
+                {user ? (
+                  <>
+                    {isBusinessOwner && (
+                      <Link to="/cart">
+                        <Button variant="outline" className="justify-start w-full">
+                          <ShoppingCart className="w-4 h-4 mr-2" />
+                          Cart
+                        </Button>
+                      </Link>
+                    )}
+                    <Link to="/dashboard">
+                      <Button variant="outline" className="justify-start w-full">
+                        <User className="w-4 h-4 mr-2" />
+                        Dashboard
+                      </Button>
+                    </Link>
+                    <Button variant="outline" className="justify-start w-full" onClick={signOut}>
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Sign Out
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/auth">
+                      <Button variant="ghost" className="justify-start w-full">
+                        Sign In
+                      </Button>
+                    </Link>
+                    <Link to="/signup">
+                      <Button className="justify-start w-full">
+                        Register Business
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </nav>
           </div>

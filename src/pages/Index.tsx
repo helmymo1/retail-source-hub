@@ -421,24 +421,24 @@ const ProductCard = ({ product, onAddToCart, canOrder }: ProductCardProps) => {
           </div>
         </div>
 
-        {canOrder && (
-          <div className="flex items-center gap-2">
-            <Input
-              type="number"
-              min="1"
-              value={quantity}
-              onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-              className="w-20"
-            />
-            <Button
-              onClick={() => onAddToCart(product, quantity)}
-              className="flex-1"
-              size="sm"
-            >
-              Add to Inquiry
-            </Button>
-          </div>
-        )}
+                        {canOrder && (
+                          <div className="flex items-center gap-2 mt-4">
+                            <Input
+                              type="number"
+                              min="1"
+                              value={quantity}
+                              onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+                              className="w-20"
+                            />
+                            <Button
+                              onClick={() => onAddToCart(product, quantity)}
+                              className="flex-1"
+                              size="sm"
+                            >
+                              Add to Cart
+                            </Button>
+                          </div>
+                        )}
       </CardContent>
     </Card>
   );

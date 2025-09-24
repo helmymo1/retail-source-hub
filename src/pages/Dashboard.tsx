@@ -222,7 +222,7 @@ const Dashboard = () => {
                   <CardTitle>Quick Actions</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Button asChild variant="hero" className="w-full justify-start">
+                  <Button asChild className="w-full justify-start">
                     <Link to="/register">
                       <Plus className="w-4 h-4 mr-2" />
                       Register New Business
@@ -257,9 +257,9 @@ const Dashboard = () => {
                     </Link>
                   </Button>
                   <Button asChild variant="outline" className="w-full justify-start">
-                    <Link to="/business/orders">
+                    <Link to="/cart">
                       <ShoppingCart className="w-4 h-4 mr-2" />
-                      My Orders
+                      My Cart
                     </Link>
                   </Button>
                 </CardContent>
@@ -270,8 +270,8 @@ const Dashboard = () => {
                   <CardTitle>Quick Order</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Button asChild variant="hero" className="w-full justify-start">
-                    <Link to="/products">
+                  <Button asChild className="w-full justify-start">
+                    <Link to="/cart">
                       <Plus className="w-4 h-4 mr-2" />
                       Place New Order
                     </Link>

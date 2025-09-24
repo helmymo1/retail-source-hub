@@ -35,13 +35,17 @@ const AdminCategories = () => {
 
   const fetchCategories = async () => {
     try {
-      const { data, error } = await supabase
+      const res = await supabase
         .from('categories')
         .select('*')
         .order('code');
 
-      if (error) throw error;
-      setCategories(data || []);
+      if (res.error) {
+        console.error('Supabase categories error', res.error);
+        toast({ title: 'Failed to load categories', description: (res.error.message || String(res.error)) });
+        return;
+      }
+      setCategories(res.data || []);
     } catch (error: any) {
       toast({
         title: "Error",

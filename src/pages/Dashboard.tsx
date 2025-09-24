@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
@@ -37,6 +37,8 @@ const Dashboard = () => {
       fetchAdminStats();
     } else if (isBusinessOwner) {
       fetchBusinessStats();
+    } else {
+      setLoading(false);
     }
   }, [isAdmin, isBusinessOwner]);
 
@@ -97,6 +99,10 @@ const Dashboard = () => {
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
+  }
+
+  if (!isAdmin && !isBusinessOwner) {
+    return <Navigate to="/" replace />;
   }
 
   return (

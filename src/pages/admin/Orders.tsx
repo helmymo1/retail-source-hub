@@ -65,7 +65,15 @@ const AdminOrders = () => {
         `)
         .order('created_at', { ascending: false });
 
-      if (ordersError) throw ordersError;
+      if (ordersError) {
+        console.error('Supabase orders error', ordersError);
+        toast({
+          title: "Failed to load orders",
+          description: ordersError.message || String(ordersError),
+          variant: "destructive",
+        });
+        return;
+      }
 
       // Then get profiles for shop owners
       const ownerIds = ordersData?.map(order => order.shops.owner_id) || [];
@@ -74,7 +82,15 @@ const AdminOrders = () => {
         .select('user_id, full_name, phone')
         .in('user_id', ownerIds);
 
-      if (profilesError) throw profilesError;
+      if (profilesError) {
+        console.error('Supabase profiles error', profilesError);
+        toast({
+          title: "Failed to load owner profiles",
+          description: profilesError.message || String(profilesError),
+          variant: "destructive",
+        });
+        return;
+      }
 
       // Map profiles to orders
       const ordersWithProfiles = ordersData?.map(order => ({

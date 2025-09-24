@@ -64,7 +64,11 @@ const AdminProducts = () => {
           .order('code')
       ]);
 
-      if (productsResult.error) throw productsResult.error;
+      if (productsResult.error) {
+        console.error('Supabase products error', productsResult.error);
+        toast({ title: 'Failed to load products', description: (productsResult.error.message || String(productsResult.error)) });
+        return;
+      }
       if (categoriesResult.error) throw categoriesResult.error;
 
       setProducts(productsResult.data || []);

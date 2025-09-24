@@ -32,16 +32,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    const authSub = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        setUserRole(session?.user?.user_metadata?.role || null);
+        // defensive access to metadata
+        setUserRole((session as any)?.user?.user_metadata?.role || null);
       }
     );
 
     return () => {
-      subscription.unsubscribe();
+      try {
+        // defensive unsubscribe in case shape differs
+        (authSub as any)?.data?.subscription?.unsubscribe?.();
+      } catch (e) {
+        // ignore cleanup errors
+      }
     };
   }, []);
 

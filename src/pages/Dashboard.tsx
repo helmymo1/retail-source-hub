@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,9 +40,9 @@ const Dashboard = () => {
     } else {
       setLoading(false);
     }
-  }, [isAdmin, isBusinessOwner]);
+  }, [isAdmin, isBusinessOwner, fetchAdminStats, fetchBusinessStats]);
 
-  const fetchAdminStats = async () => {
+  const fetchAdminStats = useCallback(async () => {
     try {
       const [shopsResult, productsResult, ordersResult, categoriesResult] = await Promise.all([
         supabase.from('shops').select('id', { count: 'exact', head: true }),
@@ -62,9 +62,9 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchBusinessStats = async () => {
+  const fetchBusinessStats = useCallback(async () => {
     try {
       // Get business owner's shop
       const { data: shop } = await supabase
@@ -91,7 +91,7 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   if (loading) {
     return (
@@ -218,6 +218,12 @@ const Dashboard = () => {
                     <Link to="/admin/orders">
                       <ShoppingCart className="w-4 h-4 mr-2" />
                       Manage Orders
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" className="w-full justify-start">
+                    <Link to="/admin/users">
+                      <Users className="w-4 h-4 mr-2" />
+                      Manage Users
                     </Link>
                   </Button>
                 </CardContent>

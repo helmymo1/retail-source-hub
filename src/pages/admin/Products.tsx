@@ -8,7 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Plus, Edit, Trash2, Package } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { ArrowLeft, Plus, Edit, Trash2, Package, MoreHorizontal } from 'lucide-react';
 
 interface Product {
   id: string;
@@ -192,6 +193,25 @@ const AdminProducts = () => {
       category_id: ''
     });
     setEditingProduct(null);
+  };
+
+  const handleAddToCart = (product: Product) => {
+    const savedCart = localStorage.getItem('wholesale-cart');
+    let cart: any[] = savedCart ? JSON.parse(savedCart) : [];
+
+    const existingItem = cart.find(item => item.productId === product.id);
+
+    if (existingItem) {
+      existingItem.quantity += 1;
+    } else {
+      cart.push({ productId: product.id, quantity: 1, product });
+    }
+
+    localStorage.setItem('wholesale-cart', JSON.stringify(cart));
+    toast({
+      title: 'Added to cart',
+      description: `${product.name} has been added to your cart.`,
+    });
   };
 
   if (loading) {
@@ -389,16 +409,30 @@ const AdminProducts = () => {
                           </div>
                         </div>
                         <div className="flex gap-2 ml-4">
-                          <Button size="sm" variant="outline" onClick={() => handleEdit(product)}>
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => handleDelete(product.id)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <span className="sr-only">Open menu</span>
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuItem onClick={() => handleAddToCart(product)}>
+                                Add to Cart
+                              </DropdownMenuItem>
+                              <DropdownMenuItem asChild>
+                                <Link to={`/item/${product.id}`}>View Item Details</Link>
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => handleEdit(product)}>
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleDelete(product.id)}>
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </div>
                     </div>

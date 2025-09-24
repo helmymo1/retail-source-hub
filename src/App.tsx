@@ -19,6 +19,7 @@ import AdminProducts from "./pages/admin/Products";
 import AdminOrders from "./pages/admin/Orders";
 import AdminShops from "./pages/admin/Shops";
 import BusinessOrders from "./pages/business/Orders";
+import ItemPage from "./pages/Item";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/products" element={<Index />} />
+            <Route path="/item/:id" element={<ProtectedRoute><ItemPage /></ProtectedRoute>} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

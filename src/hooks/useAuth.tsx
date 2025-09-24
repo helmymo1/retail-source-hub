@@ -38,6 +38,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(session?.user ?? null);
         // defensive access to metadata
         setUserRole((session as any)?.user?.user_metadata?.role || null);
+        setLoading(false);
       }
     );
 
@@ -51,35 +52,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  const signIn = async (email: string, password: string) => {
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      
-      if (error) {
-        toast({
-          title: "Sign In Failed",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Sign In Successful",
-          description: "You have been signed in successfully.",
-        });
-      }
-      
-      return { error };
-    } catch (error: any) {
+  const signIn = async (email: string, password:string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
       toast({
         title: "Sign In Failed",
-        description: "An unexpected error occurred",
+        description: error.message,
         variant: "destructive",
       });
-      return { error };
+    } else if (data.user) {
+      setUser(data.user);
+      setUserRole(data.user.user_metadata?.role || null);
+      toast({
+        title: "Sign In Successful",
+        description: "You have been signed in successfully.",
+      });
     }
+    return { error };
   };
 
   const signUp = async (email: string, password: string, metadata: any) => {
